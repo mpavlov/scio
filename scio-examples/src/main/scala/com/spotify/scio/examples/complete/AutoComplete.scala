@@ -18,14 +18,14 @@
 package com.spotify.scio.examples.complete
 
 import com.google.api.services.bigquery.model.{TableFieldSchema, TableSchema}
-import com.google.api.services.datastore.DatastoreV1.Entity
-import com.google.api.services.datastore.client.DatastoreHelper
+import com.google.datastore.v1beta3.Entity
+import com.google.datastore.v1beta3.client.DatastoreHelper
 import org.apache.beam.examples.common.DataflowExampleUtils
 import com.spotify.scio._
 import com.spotify.scio.bigquery._
 import com.spotify.scio.examples.common.{ExampleData, ExampleOptions}
 import com.spotify.scio.values.SCollection
-import org.apache.beam.runners.dataflow.DataflowPipelineRunner
+import org.apache.beam.runners.dataflow.DataflowRunner
 import org.joda.time.Duration
 
 import scala.collection.JavaConverters._
@@ -78,17 +78,18 @@ object AutoComplete {
     }
 
   def makeEntity(kind: String, kv: (String, Iterable[(String, Long)])): Entity = {
-    val key = DatastoreHelper.makeKey(kind, kv._1).build();
+    val key = DatastoreHelper.makeKey(kind, kv._1).build()
     val candidates = kv._2.map { p =>
       DatastoreHelper.makeValue(Entity.newBuilder()
-        .addProperty(DatastoreHelper.makeProperty("tag", DatastoreHelper.makeValue(p._1)))
-        .addProperty(DatastoreHelper.makeProperty("count", DatastoreHelper.makeValue(p._2)))
-      ).setIndexed(false).build()
+        .putAllProperties(Map(
+          "tag" -> DatastoreHelper.makeValue(p._1).build(),
+          "count" -> DatastoreHelper.makeValue(p._2).build()).asJava)).build()
     }
     Entity.newBuilder()
       .setKey(key)
-      .addProperty(
-        DatastoreHelper.makeProperty("candidates", DatastoreHelper.makeValue(candidates.asJava)))
+      .putAllProperties(Map(
+        "candidates" -> DatastoreHelper.makeValue(candidates.asJava).build()
+      ).asJava)
       .build()
   }
 
@@ -97,7 +98,7 @@ object AutoComplete {
     // set up example wiring
     val (opts, args) = ScioContext.parseArguments[ExampleOptions](cmdlineArgs)
     if (opts.isStreaming) {
-      opts.setRunner(classOf[DataflowPipelineRunner])
+      opts.setRunner(classOf[DataflowRunner])
     }
     opts.setBigQuerySchema(bigQuerySchema)
     val dataflowUtils = new DataflowExampleUtils(opts)

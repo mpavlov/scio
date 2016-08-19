@@ -34,13 +34,13 @@ object DataflowExample {
 
   // A native Dataflow source PTransform
   def pubsubIn(topic: String): PTransform[PInput, PCollection[Account]] =
-    PubsubIO.Read.named("PubsubIn")
+    PubsubIO.Read
       .topic(topic)
       .withCoder(AvroCoder.of(classOf[Account]))
 
   // A native Dataflow windowing PTransform
   val window: PTransform[PCollection[Account], PCollection[Account]] =
-    Window.named("Window")
+    Window
       .into[Account](FixedWindows.of(Duration.standardMinutes(60)))
       .triggering(
         AfterWatermark
@@ -60,7 +60,7 @@ object DataflowExample {
 
   // A native Dataflow sink PTransform
   def pubsubOut(topic: String): PTransform[PCollection[KV[String, java.lang.Double]], PDone] =
-    PubsubIO.Write.named("PubsubOut")
+    PubsubIO.Write
       .topic(topic)
       .withCoder(KvCoder.of(StringUtf8Coder.of(), DoubleCoder.of()))
 

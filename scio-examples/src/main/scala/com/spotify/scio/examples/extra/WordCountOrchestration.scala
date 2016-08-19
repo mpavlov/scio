@@ -21,7 +21,7 @@ import com.spotify.scio._
 import com.spotify.scio.examples.common.ExampleData
 import com.spotify.scio.io.Tap
 import com.spotify.scio.values.SCollection
-import org.apache.beam.runners.dataflow.DataflowPipelineRunner
+import org.apache.beam.runners.dataflow.DataflowRunner
 import org.apache.beam.sdk.options.PipelineOptions
 
 import scala.concurrent.duration.Duration
@@ -45,7 +45,7 @@ object WordCountOrchestration {
     val (opts, args) = ScioContext.parseArguments[PipelineOptions](cmdlineArgs)
 
     // Use a non-blocking runner
-    opts.setRunner(classOf[DataflowPipelineRunner])
+    opts.setRunner(classOf[DataflowRunner])
 
     val output = args("output")
 

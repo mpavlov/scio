@@ -19,7 +19,7 @@ package com.spotify.scio.examples.complete
 
 import com.google.api.services.bigquery.model.{TableFieldSchema, TableSchema}
 import org.apache.beam.examples.common.DataflowExampleUtils
-import org.apache.beam.runners.dataflow.DataflowPipelineRunner
+import org.apache.beam.runners.dataflow.DataflowRunner
 import com.spotify.scio._
 import com.spotify.scio.bigquery._
 import com.spotify.scio.examples.common.{ExampleData, ExampleOptions}
@@ -61,7 +61,7 @@ object TrafficRoutes {
     // set up example wiring
     val (opts, args) = ScioContext.parseArguments[ExampleOptions](cmdlineArgs)
     if (opts.isStreaming) {
-      opts.setRunner(classOf[DataflowPipelineRunner])
+      opts.setRunner(classOf[DataflowRunner])
     }
     opts.setBigQuerySchema(schema)
     val dataflowUtils = new DataflowExampleUtils(opts)

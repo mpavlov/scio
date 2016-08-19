@@ -18,18 +18,18 @@
 package com.spotify.scio.examples.cookbook
 
 import com.google.api.services.bigquery.model.{TableFieldSchema, TableSchema}
-import org.apache.beam.examples.common.{DataflowExampleUtils, PubsubFileInjector}
-import org.apache.beam.examples.cookbook.TriggerExample.InsertDelays
-import org.apache.beam.runners.dataflow.DataflowPipelineRunner
-import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions
-import org.apache.beam.sdk.io.TextIO
-import org.apache.beam.sdk.Pipeline
-import org.apache.beam.sdk.transforms.{IntraBundleParallelization, ParDo}
-import org.apache.beam.sdk.transforms.windowing._
 import com.spotify.scio._
 import com.spotify.scio.bigquery._
 import com.spotify.scio.examples.common.ExampleOptions
-import com.spotify.scio.values.{WindowOptions, WindowedValue}
+import com.spotify.scio.values.WindowOptions
+import org.apache.beam.examples.common.{DataflowExampleUtils, PubsubFileInjector}
+import org.apache.beam.examples.cookbook.TriggerExample.InsertDelays
+import org.apache.beam.runners.dataflow.DataflowRunner
+import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions
+import org.apache.beam.sdk.Pipeline
+import org.apache.beam.sdk.io.TextIO
+import org.apache.beam.sdk.transforms.windowing._
+import org.apache.beam.sdk.transforms.{IntraBundleParallelization, ParDo}
 import org.joda.time.{Duration, Instant}
 
 import scala.collection.JavaConverters._
@@ -69,7 +69,7 @@ object TriggerExample {
     // set up example wiring
     val (opts, args) = ScioContext.parseArguments[ExampleOptions](cmdlineArgs)
     opts.setStreaming(true)
-    opts.setRunner(classOf[DataflowPipelineRunner])
+    opts.setRunner(classOf[DataflowRunner])
     opts.setBigQuerySchema(schema)
     val dataflowUtils = new DataflowExampleUtils(opts)
     dataflowUtils.setup()
@@ -188,8 +188,8 @@ object TriggerExample {
     copiedOpts.setJobName(opts.getJobName + "-injector")
     val pipeline = Pipeline.create(copiedOpts)
     pipeline
-      .apply(TextIO.Read.named("ReadMyFile").from(input))
-      .apply(ParDo.named("InsertRandomDelays").of(new InsertDelays))
+      .apply("ReadMyFile", TextIO.Read.from(input))
+      .apply("InsertRandomDelays", ParDo.of(new InsertDelays))
       .apply(IntraBundleParallelization.of(PubsubFileInjector
         .withTimestampLabelKey(PUBSUB_TIMESTAMP_LABEL_KEY)
         .publish(opts.getPubsubTopic))

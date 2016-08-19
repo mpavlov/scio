@@ -18,14 +18,14 @@
 package org.apache.beam.examples.common;
 
 import org.apache.beam.runners.dataflow.DataflowPipelineJob;
-import org.apache.beam.runners.dataflow.DataflowPipelineRunner;
+import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.runners.dataflow.util.MonitoringUtil;
+import org.apache.beam.runners.direct.DirectRunner;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.PipelineResult;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.BigQueryOptions;
-import org.apache.beam.sdk.runners.DirectPipelineRunner;
 import org.apache.beam.sdk.transforms.IntraBundleParallelization;
 import org.apache.beam.sdk.transforms.PTransform;
 import org.apache.beam.sdk.util.AttemptBoundedExponentialBackOff;
@@ -314,15 +314,15 @@ public class DataflowExampleUtils {
   }
 
   /**
-   * Do some runner setup: check that the DirectPipelineRunner is not used in conjunction with
-   * streaming, and if streaming is specified, use the DataflowPipelineRunner. Return the streaming
-   * flag value.
+   * Do some runner setup: check that the DirectRunner is not used in conjunction with streaming,
+   * and if streaming is specified, use the DataflowPipelineRunner. Return the streaming flag
+   * value.
    */
   public void setupRunner() {
-    if (options.isStreaming() && options.getRunner() != DirectPipelineRunner.class) {
+    if (options.isStreaming() && options.getRunner() != DirectRunner.class) {
       // In order to cancel the pipelines automatically,
-      // {@literal DataflowPipelineRunner} is forced to be used.
-      options.setRunner(DataflowPipelineRunner.class);
+      // {@literal DataflowRunner} is forced to be used.
+      options.setRunner(DataflowRunner.class);
     }
   }
 
@@ -360,7 +360,7 @@ public class DataflowExampleUtils {
     }
     copiedOptions.setStreaming(false);
     copiedOptions.setWorkerHarnessContainerImage(
-        DataflowPipelineRunner.BATCH_WORKER_HARNESS_CONTAINER_IMAGE);
+        DataflowRunner.BATCH_WORKER_HARNESS_CONTAINER_IMAGE);
     copiedOptions.setNumWorkers(options.as(DataflowExampleOptions.class).getInjectorNumWorkers());
     copiedOptions.setJobName(options.getJobName() + "-injector");
     Pipeline injectorPipeline = Pipeline.create(copiedOptions);
@@ -404,13 +404,13 @@ public class DataflowExampleUtils {
         addShutdownHook(jobsToCancel);
       }
       try {
-        job.waitToFinish(-1, TimeUnit.SECONDS, new MonitoringUtil.PrintHandler(System.out));
+        job.waitToFinish(-1, TimeUnit.SECONDS, new MonitoringUtil.LoggingHandler());
       } catch (Exception e) {
         throw new RuntimeException("Failed to wait for job to finish: " + job.getJobId());
       }
     } else {
       // Do nothing if the given PipelineResult doesn't support waitToFinish(),
-      // such as EvaluationResults returned by DirectPipelineRunner.
+      // such as EvaluationResults returned by DirectRunner.
       tearDown();
       printPendingMessages();
     }

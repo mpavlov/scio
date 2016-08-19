@@ -97,7 +97,7 @@ object AvroExample {
       new Schema.Field(
         name,
         Schema.createUnion(List(Schema.create(Schema.Type.NULL), Schema.create(tpe)).asJava),
-        null, null)
+        null, null.asInstanceOf[Object])
 
     val s = Schema.createRecord("GenericAccountRecord", null, null, false)
     s.setFields(List(

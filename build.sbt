@@ -226,6 +226,7 @@ lazy val scioBigQuery: Project = Project(
     libraryDependencies ++= beamDependencies,
     libraryDependencies ++= Seq(
       "commons-io" % "commons-io" % commonsIoVersion,
+      "org.apache.beam" % "beam-sdks-java-io-google-cloud-platform" % beamVersion,
       "org.slf4j" % "slf4j-api" % slf4jVersion,
       "org.joda" % "joda-convert" % jodaConvertVersion,
       "org.scalatest" %% "scalatest" % scalaTestVersion % "test"

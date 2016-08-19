@@ -22,7 +22,7 @@ import org.apache.beam.examples.common.DataflowExampleUtils
 import com.spotify.scio._
 import com.spotify.scio.bigquery._
 import com.spotify.scio.examples.common.{ExampleData, ExampleOptions}
-import org.apache.beam.runners.dataflow.DataflowPipelineRunner
+import org.apache.beam.runners.dataflow.DataflowRunner
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{Duration, Instant}
 
@@ -66,7 +66,7 @@ object TrafficMaxLaneFlow {
     // set up example wiring
     val (opts, args) = ScioContext.parseArguments[ExampleOptions](cmdlineArgs)
     if (opts.isStreaming) {
-      opts.setRunner(classOf[DataflowPipelineRunner])
+      opts.setRunner(classOf[DataflowRunner])
     }
     opts.setBigQuerySchema(schema)
     val dataflowUtils = new DataflowExampleUtils(opts)
