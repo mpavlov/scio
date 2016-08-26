@@ -1,0 +1,27 @@
+#!/bin/bash
+
+
+# Determine the path to the script's directory
+APPPATH=$( cd "$(dirname "$0")" ; pwd -P )
+
+VERPATH="$APPPATH/../version.sbt"
+if [ -f $VERPATH ]; then
+    VERSION=$(grep -o '".*"' $VERPATH | tr -d '"''"')
+    JARPATH="$APPPATH/../scio-repl/target/scala-2.11/scio-repl-$VERSION.jar"
+fi
+
+if [ ! -f "$JARPATH" ]; then
+    JARPATH="$APPPATH/../libexec/scio-repl-*.jar"
+fi
+
+java_opts=()
+scio_opts=()
+for o in "$@"; do
+if [[ "$o" =~ ^-D.* ]]; then
+    java_opts+=("$o")
+else
+    scio_opts+=("$o")
+fi
+done
+
+exec java ${java_opts[*]} -jar $JARPATH ${scio_opts[*]}
