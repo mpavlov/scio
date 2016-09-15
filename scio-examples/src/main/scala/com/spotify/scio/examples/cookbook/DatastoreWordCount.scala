@@ -19,10 +19,11 @@ package com.spotify.scio.examples.cookbook
 
 import java.util.UUID
 
-import com.google.api.services.datastore.DatastoreV1.{Query, Entity}
-import com.google.api.services.datastore.client.DatastoreHelper
+import com.google.datastore.v1.client.DatastoreHelper.{makeKey, makeValue}
 import com.google.cloud.dataflow.sdk.options.PipelineOptions
 import com.google.cloud.dataflow.sdk.runners.BlockingDataflowPipelineRunner
+import com.google.common.collect.ImmutableMap
+import com.google.datastore.v1.{Entity, Query}
 import com.spotify.scio._
 import com.spotify.scio.examples.common.ExampleData
 
@@ -50,12 +51,12 @@ object DatastoreWordCount {
 
     val kind = args.getOrElse("kind", "shakespeare-demo")
     val namespace = args.optional("namespace")
-    val dataset = args("dataset")
+    val project = args("project")
 
     val ancestorKey = {
-      val k = DatastoreHelper.makeKey(kind, "root")
-      namespace.foreach(k.getPartitionIdBuilder.setNamespace)
-      k.build()
+      val key = makeKey(kind, "root")
+      namespace.foreach(key.getPartitionIdBuilder.setNamespaceId)
+      key.build()
     }
 
     // pipeline that writes to Datastore
@@ -63,14 +64,14 @@ object DatastoreWordCount {
       val sc = ScioContext(opts)
       sc.textFile(args.getOrElse("input", ExampleData.KING_LEAR))
         .map { s =>
-          val k = DatastoreHelper.makeKey(ancestorKey, kind, UUID.randomUUID().toString)
-          namespace.foreach(k.getPartitionIdBuilder.setNamespace)
+          val key = makeKey(ancestorKey, kind, UUID.randomUUID().toString)
+          namespace.foreach(key.getPartitionIdBuilder.setNamespaceId)
           Entity.newBuilder()
-            .setKey(k.build())
-            .addProperty(DatastoreHelper.makeProperty("content", DatastoreHelper.makeValue(s)))
+            .setKey(key.build())
+            .putAllProperties(ImmutableMap.of("content", makeValue(s).build()))
             .build()
         }
-        .saveAsDatastore(dataset)
+        .saveAsDatastoreV1(project)
       sc.close()
     }
 
@@ -83,9 +84,9 @@ object DatastoreWordCount {
       }
 
       val sc = ScioContext(opts)
-      sc.datastore(dataset, query)
+      sc.datastoreV1(project, query)
         .flatMap { e =>
-          DatastoreHelper.getPropertyMap(e).asScala.get("content").map(_.getStringValue).toSeq
+          e.getProperties.asScala.get("content").map(_.getStringValue).toSeq
         }
         .flatMap(_.split("[^a-zA-Z']+").filter(_.nonEmpty))
         .countByValue
