@@ -43,7 +43,7 @@ object TypedBigQueryTornadoes {
   // Note that the case class is already defined and will not be expanded. Only the companion
   // object will be generated to provide easy access to TableSchema and converter methods.
   @BigQueryType.toTable
-  case class Result(month: Long, tornado_count: Long)
+  case class Result(month: Int, tornado_count: Int)
 
   def main(cmdlineArgs: Array[String]): Unit = {
     val (sc, args) = ContextAndArgs(cmdlineArgs)
@@ -53,7 +53,7 @@ object TypedBigQueryTornadoes {
     sc.typedBigQuery[Row]()
       .flatMap(r => if (r.tornado.getOrElse(false)) Seq(r.month) else Nil)
       .countByValue
-      .map(kv => Result(kv._1, kv._2))
+      .map(kv => Result(kv._1.toInt, kv._2.toInt))
       // Convert elements from Result to TableRow and save output to BigQuery.
       .saveAsTypedBigQuery(args("output"), WRITE_TRUNCATE, CREATE_IF_NEEDED)
 

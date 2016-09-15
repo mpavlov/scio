@@ -83,9 +83,10 @@ private[types] object TypeProvider {
         val defSchema = q"override def schema: ${p(c, GModel)}.TableSchema = ${p(c, SType)}.schemaOf[$name]"
         val defToPrettyString = q"override def toPrettyString(indent: Int = 0): String = ${p(c, s"$SBQ.types.SchemaUtil")}.toPrettyString(this.schema, ${name.toString}, indent)"
         val fnTrait = tq"${newTypeName(s"Function${fields.size}")}[..${fields.flatMap(_.children)}, $name]"
+        val traits = if (fields.size <= 22) Seq(fnTrait) else Seq()
         val caseClassTree = q"""${caseClass(c)(name, fields, body)}"""
         (q"""$caseClassTree
-            ${companion(c)(name, Seq(fnTrait), Seq(defSchema, defToPrettyString), fields.asInstanceOf[Seq[Tree]].size)}
+            ${companion(c)(name, traits, Seq(defSchema, defToPrettyString), fields.asInstanceOf[Seq[Tree]].size)}
         """, caseClassTree, name.toString())
       case t => c.abort(c.enclosingPosition, s"Invalid annotation $t")
     }
@@ -323,7 +324,7 @@ private[types] object TypeProvider {
 
 private[types] object NameProvider {
 
-  private val m = MMap.empty[String, Int]
+  private val m = MMap.empty[String, Int].withDefaultValue(0)
 
   /**
    * Generate a unique name for a nested record.
@@ -332,13 +333,8 @@ private[types] object NameProvider {
    */
   def getUniqueName(name: String): String = m.synchronized {
     val cName = toPascalCase(name) + '$'
-    if (m.contains(cName)) {
-      m(cName) += 1
-      cName + m(cName)
-    } else {
-      m.put(cName, 1)
-      cName
-    }
+    m(cName) += 1
+    cName + m(cName)
   }
 
   private def toPascalCase(s: String): String =
