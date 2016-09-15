@@ -17,8 +17,9 @@
 
 package com.spotify.scio.testing
 
-import com.google.api.services.datastore.DatastoreV1.Entity
-import com.google.api.services.datastore.client.DatastoreHelper
+import com.google.common.collect.ImmutableMap
+import com.google.datastore.v1.Entity
+import com.google.datastore.v1.client.DatastoreHelper.{makeKey, makeValue}
 import com.spotify.scio._
 import com.spotify.scio.avro.AvroUtils.{newGenericRecord, newSpecificRecord}
 import com.spotify.scio.avro.{AvroUtils, TestRecord}
@@ -67,8 +68,8 @@ object BigQueryJob {
 object DatastoreJob {
   def main(cmdlineArgs: Array[String]): Unit = {
     val (sc, args) = ContextAndArgs(cmdlineArgs)
-    sc.datastore(args("input"), null)
-      .saveAsDatastore(args("output"))
+    sc.datastoreV1(args("input"), null)
+      .saveAsDatastoreV1(args("output"))
     sc.close()
   }
 }
@@ -195,8 +196,8 @@ class JobTestTest extends PipelineSpec {
   }
 
   def newEntity(i: Int): Entity = Entity.newBuilder()
-    .setKey(DatastoreHelper.makeKey())
-    .addProperty(DatastoreHelper.makeProperty("int_field", DatastoreHelper.makeValue(i)))
+    .setKey(makeKey())
+    .putAllProperties(ImmutableMap.of("int_field", makeValue(i).build()))
     .build()
 
   def testDatastore(xs: Seq[Entity]): Unit = {
