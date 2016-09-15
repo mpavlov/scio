@@ -45,7 +45,7 @@ object MaxPerKeyExamples {
       .bigQueryTable(args.getOrElse("input", ExampleData.WEATHER_SAMPLES_TABLE))
       .map(row => (row.getLong("month"), row.getDouble("mean_temp")))
       .maxByKey
-      .map(kv => TableRow("month" -> kv._1, "max_mean_temp" -> kv._2))
+      .map(kv => TableRow("month" -> kv._1.toInt, "max_mean_temp" -> kv._2))
       .saveAsBigQuery(args("output"), schema, WRITE_TRUNCATE, CREATE_IF_NEEDED)
 
     sc.close()
