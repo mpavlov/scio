@@ -933,11 +933,12 @@ sealed trait SCollection[T] extends PCollectionWrapper[T] {
    * Save this SCollection as a Datastore dataset. Note that elements must be of type Entity.
    * @group output
    */
-  def saveAsDatastoreV1(projectId: String)(implicit ev: T <:< Entity): Future[Tap[Entity]] = {
+  def saveAsDatastore(projectId: String)(implicit ev: T <:< Entity): Future[Tap[Entity]] = {
     if (context.isTest) {
       context.testOut(DatastoreIO(projectId))(this.asInstanceOf[SCollection[Entity]])
     } else {
-      this.asInstanceOf[SCollection[Entity]].applyInternal(gio.datastore.DatastoreIO.v1.write.withProjectId(projectId))
+      this.asInstanceOf[SCollection[Entity]].applyInternal(
+        gio.datastore.DatastoreIO.v1.write.withProjectId(projectId))
     }
     Future.failed(new NotImplementedError("Datastore future not implemented"))
   }

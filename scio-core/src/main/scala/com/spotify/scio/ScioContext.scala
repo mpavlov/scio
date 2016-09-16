@@ -457,7 +457,7 @@ class ScioContext private[scio] (val options: PipelineOptions,
    * Get an SCollection for a Datastore query.
    * @group input
    */
-  def datastoreV1(projectId: String, query: Query, namespace: String = null): SCollection[Entity] =
+  def datastore(projectId: String, query: Query, namespace: String = null): SCollection[Entity] =
     pipelineOp {
       if (this.isTest) {
         this.getTestInput(DatastoreIO(projectId, query, namespace))

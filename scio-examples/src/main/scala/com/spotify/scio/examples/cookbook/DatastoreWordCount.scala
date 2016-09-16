@@ -20,7 +20,7 @@ package com.spotify.scio.examples.cookbook
 import java.util.UUID
 
 import com.google.datastore.v1.client.DatastoreHelper.{makeKey, makeValue}
-import com.google.cloud.dataflow.sdk.options.PipelineOptions
+import com.google.cloud.dataflow.sdk.options.{DataflowPipelineOptions, PipelineOptions}
 import com.google.cloud.dataflow.sdk.runners.BlockingDataflowPipelineRunner
 import com.google.common.collect.ImmutableMap
 import com.google.datastore.v1.{Entity, Query}
@@ -46,12 +46,13 @@ object DatastoreWordCount {
   def main(cmdlineArgs: Array[String]): Unit = {
     val (opts, args) = ScioContext.parseArguments[PipelineOptions](cmdlineArgs)
 
-    // override runner to ensure sequential execution
+    // enforce sequential execution for this example, since we don't want
+    // read pipeline to start before write pipeline has finished
     opts.setRunner(classOf[BlockingDataflowPipelineRunner])
 
     val kind = args.getOrElse("kind", "shakespeare-demo")
     val namespace = args.optional("namespace")
-    val project = args("project")
+    val project = opts.as(classOf[DataflowPipelineOptions]).getProject
 
     val ancestorKey = {
       val key = makeKey(kind, "root")
@@ -71,7 +72,7 @@ object DatastoreWordCount {
             .putAllProperties(ImmutableMap.of("content", makeValue(s).build()))
             .build()
         }
-        .saveAsDatastoreV1(project)
+        .saveAsDatastore(project)
       sc.close()
     }
 
@@ -84,7 +85,7 @@ object DatastoreWordCount {
       }
 
       val sc = ScioContext(opts)
-      sc.datastoreV1(project, query)
+      sc.datastore(project, query)
         .flatMap { e =>
           e.getProperties.asScala.get("content").map(_.getStringValue).toSeq
         }

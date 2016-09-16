@@ -143,7 +143,7 @@ object AutoComplete {
     if (outputToDatastore) {
       tags
         .map(makeEntity(kind, _))
-        .saveAsDatastoreV1(opts.getProject)
+        .saveAsDatastore(opts.getProject)
     }
 
     val result = sc.close()

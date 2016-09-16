@@ -68,8 +68,8 @@ object BigQueryJob {
 object DatastoreJob {
   def main(cmdlineArgs: Array[String]): Unit = {
     val (sc, args) = ContextAndArgs(cmdlineArgs)
-    sc.datastoreV1(args("input"), null)
-      .saveAsDatastoreV1(args("output"))
+    sc.datastore(args("input"), null)
+      .saveAsDatastore(args("output"))
     sc.close()
   }
 }
